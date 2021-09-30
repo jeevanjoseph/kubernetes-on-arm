@@ -1,0 +1,3 @@
+This image shows the various options for creating a cluster using the "Quick Create" option. 
+The Ampere A1 compute shape is highlighted as the selection for the node pool in the cluster.
+The virtual machine variant of the  Ampere A1 shape is chosen and it shows the flexible options for the VM, like controlling the number of CPUs and amount of memory allocated to the VM.

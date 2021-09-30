@@ -1,0 +1,1 @@
+This image shows the various options to access the cluster. the option to use the cloud shell is highlighted. The commands to generate a kubernetes config file are displayed. These commands can be copied to the cloud shell. 

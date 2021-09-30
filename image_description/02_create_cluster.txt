@@ -1,0 +1,1 @@
+This image shows the cluster creation workflow options. It includes the "Quick Create" as well as the "Custom Create" options
