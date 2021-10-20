@@ -101,9 +101,11 @@ The kubernetes cluster adds labels to the nodes by default and while these label
 
 ```
 kubectl get nodes -o json |jq '.items[] | {name:.metadata.name, labels:.metadata.labels}'
+
+kubectl get nodes -o json | jq -r '.items | sort_by(.spec.nodeName)[] | [.metadata.name, .metadata.labels."kubernetes.io/arch"] | @tsv'
 ```
 
-Start by creating an architecture-neutral deployment manifest. The manifest should not refer to any architecture specific containers, as the container runtime is capable of detecting the correct architecture and pulling the appropriate image. To create the manifest, runs the commend below. It creates a new file named `tomcat.yaml`.
+Start by creating a deployment manifest. The manifest should not refer to any architecture specific containers, as the container runtime is capable of detecting the correct architecture and pulling the appropriate image. To create the manifest, runs the commend below. It creates a new file named `tomcat.yaml`.
 
 ```
 cat <<EOF > tomcat.yaml
@@ -161,6 +163,7 @@ EOF
 This manifest contains the following objects and actions :
 
   - A deployment object with the name `tomcat` and label `app: tomcat`. 
+  - The Pod has a `nodeSelector` that selects nodes that match `kubernetes.io/arch: arm64`
   - The deployment has 3 replicas.
   - The pods in the deployment have a single container - `tomcat:9`. Note that the manifest does not specify the architecture, making it valid across all architectures. Docker will pull the image that supports the appropriate architecture at runtime. 
   - A *Volume* object is created from a *ConfigMap*, and mounted in to the container. This ConfigMap will be created later, and will contain the application.
@@ -199,6 +202,8 @@ This manifest contains the following objects and actions :
       service/kubernetes   ClusterIP      10.96.0.1      <none>           443/TCP        6d4h
       service/tomcat       LoadBalancer   10.96.90.168   132.226.33.129   80:30558/TCP   144m
       ```
+   Once the Public IP is available, you will be able to navigate to http://<EXTERNAL-IP>/sample/ to view the application we deployed.  
+
    This shows that Tomcat has been deployed successfully on our Arm based kubernetes cluster and is serving a Java web application. The deployment manifest we used is not tied to the architecture, and can be used for x86 as well as Arm based clusters. 
 
 4. You can optionally get detailed node level details by running  
@@ -208,13 +213,17 @@ This manifest contains the following objects and actions :
       kubectl describe node <node_name>
       ```
    Detailed information about the node, including the architecture and the pods that are scheduled on that node are displayed.
+   You can also find which nodes your pods are running on and what architecture they use.
+      ```
+      kubectl get pods -o json | jq -r '.items | sort_by(.status.hostIP)[]|[.spec.containers[].image,.status.phase,.spec.nodeName,.spec.nodeSelector."kubernetes.io/arch",.status.containerStatuses[].imageID]|@tsv'
+      ```
 
    When the external IP address for the LoadBalancer is available (this could take a couple of minutes) you can visit the deployment by pointing your web browser to `http://<your_loadbalancer_ip_address>/sample`
 
 5. Now we can move beyond a clinical example and deploy a popular open source project - WordPress. 
-   You can lone this repository to get the source files - 
+   You can clone this repository to get the source files - 
    ```
-    git clone <repo url> && cd <repo> 
+    git clone https://github.com/jeevanjoseph/kubernetes-on-arm.git && cd kubernetes-on-arm 
    ```
    We can examine the manifest files - note that we are not pinning the deployments to any particular CPU architecture here, but you can. 
    Deploy with 
