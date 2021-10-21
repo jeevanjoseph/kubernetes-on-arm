@@ -116,7 +116,7 @@ metadata:
   labels:
     app: tomcat
 spec:
-  replicas: 3
+  replicas: 6
   selector:
     matchLabels:
       app: tomcat
@@ -125,6 +125,13 @@ spec:
       labels:
         app: tomcat
     spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/arch
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: wordpress
       containers:
         - name: tomcat
           image: tomcat:9
@@ -136,9 +143,7 @@ spec:
       volumes:
         - name: app-volume
           configMap:
-            name: app-bundle
-      nodeSelector:
-        kubernetes.io/arch: arm64
+            name: app-bundle  
 ---
 apiVersion: v1
 kind: Service
